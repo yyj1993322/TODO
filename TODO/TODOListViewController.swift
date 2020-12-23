@@ -9,7 +9,7 @@ import UIKit
 
 class TODOListViewController: UITableViewController {
     
-    let itemArray = ["购买水杯","吃药","修改密码"]
+    var itemArray = ["购买水杯","吃药","修改密码"]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,7 +28,6 @@ class TODOListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print(itemArray[indexPath.row])
-//        tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
         if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
             tableView.cellForRow(at: indexPath)?.accessoryType = .none
         }else {
@@ -37,5 +36,29 @@ class TODOListViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 
+    @IBAction func addButtonPressed(_ sender: Any) {
+        
+        var textField = UITextField()
+        
+        let alert = UIAlertController(title: "add new ?", message: "", preferredStyle: .alert)
+        let action = UIAlertAction(title: "add", style: .default){
+            (action) in
+            //当用户单击添加项目按钮以后要执行的代码
+            self.itemArray.append(textField.text!)
+            self.tableView.reloadData()
+        }
+        let action2 = UIAlertAction(title: "no", style: .cancel, handler: nil)
+        
+        alert.addTextField{
+            (alertTextField) in
+            alertTextField.placeholder = "add one project"
+            textField = alertTextField
+        }
+        
+        alert.addAction(action)
+        alert.addAction(action2)
+        present(alert, animated: true, completion: nil)
+        
+    }
 }
 
