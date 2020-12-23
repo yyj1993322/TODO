@@ -9,11 +9,17 @@ import UIKit
 
 class TODOListViewController: UITableViewController {
     
-    var itemArray = ["购买水杯","吃药","修改密码"]
+    let defaults = UserDefaults.standard
+    
+    var itemArray: [String] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        
+        if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+            itemArray = items
+        }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -45,6 +51,7 @@ class TODOListViewController: UITableViewController {
             (action) in
             //当用户单击添加项目按钮以后要执行的代码
             self.itemArray.append(textField.text!)
+            self.defaults.set(self.itemArray, forKey: "ToDoListArray")
             self.tableView.reloadData()
         }
         let action2 = UIAlertAction(title: "no", style: .cancel, handler: nil)
