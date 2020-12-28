@@ -19,6 +19,12 @@ class TODOListViewController: UITableViewController {
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     var itemArray = [Item]()
+    
+    var selectedCategory: MyCategory? {
+        didSet {
+            loadData()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,7 +44,7 @@ class TODOListViewController: UITableViewController {
 //        }
 //        print(dataFilePath!)
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        loadData()
+//        loadData()
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -94,6 +100,8 @@ class TODOListViewController: UITableViewController {
             let newItem = Item(context: context)
             newItem.title = textField.text!
             newItem.done = false
+            //将selectedCategory的值给Item 对象的parentCategory关系属性
+            newItem.parentCategory = self.selectedCategory
             self.itemArray.append(newItem)
             self.saveItems()
             //self.defaults.set(self.itemArray, forKey: "ToDoListArray")
@@ -126,7 +134,7 @@ class TODOListViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    func loadData(with request: NSFetchRequest<Item> = Item.fetchRequest()) {
+    func loadData(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
 //    if let data = try? Data(contentsOf: dataFilePath!) {
 //            let decoder = PropertyListDecoder()
 //        do{
@@ -136,6 +144,19 @@ class TODOListViewController: UITableViewController {
 //        }
 //      }
 //        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        
+//        let predicate = NSPredicate(format: "parentCategory.name MATCHES %@",selectedCategory!.name!)
+//        request.predicate = predicate
+        
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+//        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, predicate])
+//        request.predicate = compoundPredicate
+        if let addtionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, addtionalPredicate])
+        }else {
+            request.predicate = categoryPredicate
+        }
+        
         do {
         itemArray = try context.fetch(request)
         }catch {
