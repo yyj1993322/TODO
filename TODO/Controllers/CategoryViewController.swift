@@ -8,6 +8,7 @@
 import UIKit
 import CoreData
 import RealmSwift
+import SwipeCellKit
 
 class CategoryViewController: UITableViewController {
 
@@ -19,6 +20,7 @@ class CategoryViewController: UITableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        tableView.rowHeight = 80.0
         loadCategories()
     }
     
@@ -49,7 +51,8 @@ class CategoryViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! SwipeTableViewCell
+        cell.delegate = self
         cell.textLabel!.text = categories?[indexPath.row].name
         return cell
     }
@@ -91,4 +94,33 @@ class CategoryViewController: UITableViewController {
         tableView.reloadData()
     }
 
+}
+
+extension CategoryViewController: SwipeTableViewCellDelegate {
+    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+        guard orientation == .right else {
+            return nil
+        }
+        let deleteAction = SwipeAction(style: .destructive, title: "删除"){
+            action,index in
+            if let categoryForDeletion = self.categories?[indexPath.row] {
+                do {
+                    try self.realm.write {
+                        self.realm.delete(categoryForDeletion)
+                    }
+                } catch {
+                    print("删除类别失败: \(error)")
+                }
+            }
+        }
+        deleteAction.image = UIImage(named: "Trash-Icon")
+        return [deleteAction] 
+    }
+    
+    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
+        var options = SwipeOptions()
+            options.expansionStyle = .destructive
+            options.transitionStyle = .border
+            return options
+    }
 }

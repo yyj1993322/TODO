@@ -8,6 +8,7 @@
 import UIKit
 import CoreData
 import RealmSwift
+import SwipeCellKit
 
 
 class TODOListViewController: UITableViewController {
@@ -46,10 +47,12 @@ class TODOListViewController: UITableViewController {
 //        print(dataFilePath!)
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
 //        loadData()
+        tableView.rowHeight = 80.0
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath) as! SwipeTableViewCell
+        cell.delegate = self
 //        cell.textLabel?.text = todoItems[indexPath.row].title
 //        if todoItems[indexPath.row].done == false {
 //            cell.accessoryType = .none
@@ -130,6 +133,7 @@ class TODOListViewController: UITableViewController {
 //            try data.write(to: dataFilePath!)
 //            try context.save()
             
+            
         }catch{
 //            print("编码错误\(error)")
             print("保存context,错误\(error)")
@@ -189,5 +193,34 @@ extension TODOListViewController: UISearchBarDelegate {
                 searchBar.resignFirstResponder()
             }
         }
+    }
+}
+
+extension TODOListViewController: SwipeTableViewCellDelegate {
+    func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+        guard orientation == .right else {
+            return nil
+        }
+        let deleteAction = SwipeAction(style: .destructive, title: "删除") {
+            action,indexPath in
+            if let itemForDeletion = self.todoItems?[indexPath.row] {
+                do {
+                    try self.realm.write {
+                        self.realm.delete(itemForDeletion)
+                    }
+                } catch {
+                    print("删除TodoItem失败:\(error)")
+                }
+            }
+          }
+        deleteAction.image = UIImage(named: "Trash-Icon")
+            return [deleteAction]
+        }
+    
+    func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
+        var options = SwipeOptions()
+            options.expansionStyle = .destructive
+            options.transitionStyle = .border
+            return options
     }
 }
