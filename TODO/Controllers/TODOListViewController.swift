@@ -71,27 +71,20 @@ class TODOListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-//            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-//        }else {
-//            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-//        }
-//        if todoItems[indexPath.row].done == false {
-//            todoItems[indexPath.row].done = true
-//        }else {
-//            todoItems[indexPath.row].done = false
-//        }
-//        todoItems[indexPath.row].done = !todoItems[indexPath.row].done
-//
-//        let title = todoItems[indexPath.row].title
-//        todoItems[indexPath.row].setValue(title + "-(已完成)", forKey: "title")
-//
-//        tableView.beginUpdates()
-//        tableView.reloadRows(at: [indexPath], with: UITableView.RowAnimation.none)
-//        tableView.endUpdates()
-//        todoItems[indexPath.row].done = !todoItems[indexPath.row].done
-//        saveItems()
-//        tableView.deselectRow(at: indexPath, animated: true)
+        if let item = todoItems?[indexPath.row] {
+            do {
+                try realm.write{
+                    item.done = !item.done
+                }
+            } catch {
+                print("保存完成状态失败: \(error)")
+            }
+        }
+        tableView.beginUpdates()
+        tableView.reloadRows(at: [indexPath], with: UITableView.RowAnimation.none)
+        tableView.endUpdates()
+        
+        tableView.deselectRow(at: indexPath, animated: true)
     }
 
     @IBAction func addButtonPressed(_ sender: Any) {
@@ -107,6 +100,7 @@ class TODOListViewController: UITableViewController {
                         let newItem = Item()
                         newItem.title = textField.text!
                         newItem.done = false
+                        newItem.dateCreated = Date() //返回当前时间
                         currentCategory.items.append(newItem)
                         
                     }
@@ -182,21 +176,18 @@ class TODOListViewController: UITableViewController {
 }
 
 
-//extension TODOListViewController: UISearchBarDelegate {
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        let request: NSFetchRequest<Item> = Item.fetchRequest()
-//        request.predicate = NSPredicate(format: "title CONTAINS[c] %@", searchBar.text!)
-////        let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
-//        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-//        loadData(with: request)
-//    }
-//
-//    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-//        if searchBar.text?.count == 0 {
-//            loadData()
-//            DispatchQueue.main.async {//获取主线程，async指明主线程和后台线程一起并行执行任务
-//                searchBar.resignFirstResponder()
-//            }
-//        }
-//    }
-//}
+extension TODOListViewController: UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        todoItems = todoItems?.filter("title CONTAINS[c] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: false)
+        tableView.reloadData()
+    }
+
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadData()
+            DispatchQueue.main.async {//获取主线程，async指明主线程和后台线程一起并行执行任务
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
+}
