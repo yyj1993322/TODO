@@ -45,9 +45,28 @@ class TODOListViewController: UITableViewController {
 //            todoItems.append(newItem)
 //        }
 //        print(dataFilePath!)
+        
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
 //        loadData()
         tableView.rowHeight = 80.0
+        tableView.separatorStyle = .none
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        
+        if let colourHex = selectedCategory?.colour {
+            title = selectedCategory!.name
+            guard let navBar = navigationController?.navigationBar else {
+                fatalError("导航栏不存在！")
+            }
+            //navBar.barTintColor = UIColor(hexString: colourHex)
+            if let navBarColor = UIColor(hexString: colourHex) {
+                navBar.barTintColor = navBarColor
+                //navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+                //searchBar.barTintColor = navBarColor
+                
+            }
+        }
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -63,6 +82,13 @@ class TODOListViewController: UITableViewController {
         if let item = todoItems?[indexPath.row] {
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done == true ? .checkmark : .none
+            //设置单元格背景色
+            if let colour = UIColor(hexString: selectedCategory!.colour)?
+                .darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems!.count)) {
+                cell.backgroundColor = colour
+                //调整对比度，由于第三方不兼容所以不写
+            }
+            
         }else {
             cell.textLabel?.text = "没有事项"
         }
